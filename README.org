@@ -1,0 +1,80 @@
+Make SNO (Simultaneous Nadir Observations)
+
+Various scripts to create SNO pairs for two sensors from L1b/L1c or RTP data files.
+Designed to be run as stand-alone scripts for single day processing or batch jobs
+using control scripts.
+
+there are several combinations of data sources as follows:
+SNO data can be created for IASI & CrIS, AIRS & CrIS and AIRS & IASI.
+ - IASI & CrIS can be created from IASI L1C and CrIS CCAST L1C or RTP subsets.
+ - AIRS & CrIS currently created from AIRS L1b and CrIS CCAST L1b
+ - AIRS & IASI currently created from AIRS L1b and IASI L1C
+   For each CrIS data set the spectral resolution can be either high or low resolution.
+   For each IASI set there can be IASI-1 (MetOpA) or IASI-2 (MetOpB).
+
+There are some SNO data that have been created at and supplied by JPL, and can be found
+  in their own subdirectory JPL/
+
+Standard data fields in the SNO files:
+  Geolocation, latitude, longitude, time, satellite zenith, solar zenith angle, FOV.
+  Radiance spectral data of the Observations, and in the the case of the RTP data also
+  the calculated spectral radiance.
+
+Special sets of SNOs have been created with AIRS spectral having been deconvolved to the
+  CrIS spectral grid. After the AIRS L1b data are converted to CrIS the spectral radiances
+  are concatenated into the SNO files. So these will have extra fields.
+  
+Data files are located in:
+  /asl/s1/chepplew/data/sno/
+  
+  
+* 1.1 IASI and CrIS (low-Res) from clear subset RTP.
+- main script: function [] = make_IASI_CRIS_SNO_frmRTP.m(par1, par2, par3) 
+  par1: the required date string with format: 'YYYY/MM/DD'
+  par2: the model used to drive SARTA string. ERA or ECMWF.
+  par3: the CrIS Spectral resolution, string. Options 'high','low'
+
+- batch control script: function batch_IASI_CRIS_SNO_frmRTP()
+  generates a slurm file from the driver file: jobDates.drv
+
+- Driver file: jobDates.drv is a simple list of dates in YYYY/MM/DD<CR> format.
+
+- The shell script that invokes the matlab script: batch_IASI_CRIS_SNO_frmRTP.sh
+  Ensure par2 and par3 are set correctly here. 
+
+  The batch script should be run from the matlab CLI prompt in the batchJobs/ 
+  sub-directory, and the jobDates.drv can be a symbolic link to another file - 
+  which I prefer to have a calendar month of dates listed. 
+
+
+* 1.2 IASI and CrIS from CCAST L1 data at ASL.
+- main script: function [] = make_IASI_CRIS_sno(par1,par2)
+  par1: the required date string with format: 'YYYY/MM/DD'.
+  par2: the CrIS spectral resolution to use, either 'high' or 'low'.
+  
+- batch control script: run_makeSNO_batch.m
+  Requires a driver file of dates (usually jobDates.drv for a month worth)
+  Ensure you select the appropriate CrIS spectral resolution to use here.
+  and a slurm batch file: run_makeSNO_batch.slurm
+  Ensure the slurm file has the correct number of arrays set and
+  the main script is called.
+  
+- To run: in ./batchJobs $sbatch run_makeSNO_batch.slurm
+  Generates output and error files, if successful saves MAT files in the data directories.
+  
+- Output files are stored at: /asl/s1/chepplew/data/sno/iasi_cris/{HR,LR}/YYYY/ 
+  with names such as sno_iasi_cris_asl_yyyymmdd.mat
+    
+* 2.1 AIRS and CrIS from L1b and CCAST at ASL.
+- Main script: function [] = make_AIRS_CRIS_sno(par1, par2);
+  par1: the required date string with format 'YYYY/MM/DD'
+  par2: the CrIS spectral resolution to use, either 'high' or 'low'.
+  
+- batch control script: run_makeSNO_batch.m
+  Requires a driver file of dates (usually jobDates.drv for a month worth)
+  Ensure you select the appropriate CrIS spectral resolution to use here.
+  and a slurm batch file: run_makeSNO_batch.slurm
+  Ensure the slurm file has the correct number of arrays set and
+  the main script is called. 
+ 
+  
